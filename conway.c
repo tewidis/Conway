@@ -3,29 +3,50 @@
 #include <time.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <string.h>
 
 const int WIDTH = 50;
 const int HEIGHT = 50;
 const int ITERATIONS = 10;
 
-int** initialize_board(bool zero_initialize)
+/***
+  Initial Configurations:
+    Block
+    Beehive
+    Loaf
+    Boat
+    Tub
+    Blinker
+    Toad
+    Beacon
+    Pulsar
+    Pentadecathlon
+    Glider
+    LWSS
+    MWSS
+    HWSS
+    Rpentomino
+    Diehard
+    Acorn
+***/
+
+int** initialize_board(char* initial_state)
 {
     int** board = (int**) malloc(sizeof(int*)*WIDTH);
+    time_t t;
+    srand((unsigned) time(&t));
     int row, col;
     for(row = 0; row < WIDTH; row++)
     {
         board[row] = (int*) malloc(sizeof(int)*HEIGHT);
     }
 
-    time_t t;
-    srand((unsigned) time(&t));
-
     for(row = 0; row < WIDTH; row++)
     {
         for(col = 0; col < HEIGHT; col++)
         {
-            if(zero_initialize) { board[row][col] = 0; }
-            else { board[row][col] = rand() % 2; }
+            if(strcmp(initial_state, "zero") == 0) { board[row][col] = 0; }
+            else if(strcmp(initial_state, "random") == 0) { board[row][col] = rand() % 2; }
         }
     }
     return board;
@@ -69,13 +90,9 @@ int get_num_neighbors(int** board, int i, int j)
     return num_neighbors;
 }
 
-int main()
+void iterate(int** curr_state, int** next_state)
 {
-    int** curr_state = initialize_board(false);
-    int** next_state = initialize_board(true);
     int row, col, iter;
-
-    print_board(curr_state);
 
     for(iter = 0; iter < ITERATIONS; iter++)
     {
@@ -84,23 +101,15 @@ int main()
             for(col = 0; col < HEIGHT; col++)
             {
                 int neighbors = get_num_neighbors(curr_state, row, col);
-                if(curr_state[row][col] == 1)
+
+                if(curr_state[row][col] == 1) // alive
                 {
-                    if(neighbors == 2 || neighbors == 3)
-                    {
-                        next_state[row][col] = 1;
-                    }
-                    else
-                    {
-                        next_state[row][col] = 0;
-                    }
+                    if(neighbors == 2 || neighbors == 3) { next_state[row][col] = 1; }
+                    else { next_state[row][col] = 0; }
                 }
-                else // currently dead
+                else // dead
                 {
-                    if(neighbors == 3)
-                    {
-                        next_state[row][col] = 1;
-                    }
+                    if(neighbors == 3) { next_state[row][col] = 1; }
                 }
             }
         }
@@ -108,9 +117,29 @@ int main()
         print_board(curr_state);
         delete_board(curr_state);
         curr_state = next_state;
-        next_state = initialize_board(true);
+        next_state = initialize_board("zero");
         sleep(1);
     }
+}
+
+int main(int argc, char* argv[])
+{
+    int** curr_state;
+    int** next_state;
+
+    if(argc != 2)
+    {
+        curr_state = initialize_board("random");
+    }
+    else
+    {
+        curr_state = initialize_board(argv[1]);
+    }
+
+    next_state = initialize_board("zero");
+
+    iterate(curr_state, next_state);
+
     delete_board(curr_state);
     delete_board(next_state);
 }
