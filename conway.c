@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <string.h>
 
-const int WIDTH = 50;
-const int HEIGHT = 50;
-const int ITERATIONS = 10;
+const int WIDTH = 4;
+const int HEIGHT = 4;
+const int ITERATIONS = 1;
 
 /***
   Initial Configurations:
@@ -29,33 +29,46 @@ const int ITERATIONS = 10;
     Diehard
     Acorn
 ***/
-
-int** initialize_board(char* initial_state)
+int* convert(char* c)
 {
-    int** board = (int**) malloc(sizeof(int*)*WIDTH);
-    time_t t;
-    srand((unsigned) time(&t));
-    int row, col;
-    for(row = 0; row < WIDTH; row++)
+    int len = strlen(c),i;
+    int* a = (int*) malloc(len*sizeof(int));
+    for(i = 0; i < len; i++)
     {
-        board[row] = (int*) malloc(sizeof(int)*HEIGHT);
+        a[i] = c[i] - 48;
+        printf("%d\n", a[i]);
     }
-
-    for(row = 0; row < WIDTH; row++)
-    {
-        for(col = 0; col < HEIGHT; col++)
-        {
-            if(strcmp(initial_state, "zero") == 0) { board[row][col] = 0; }
-            else if(strcmp(initial_state, "random") == 0) { board[row][col] = rand() % 2; }
-        }
-    }
-    return board;
+    return a;
 }
 
-int** delete_board(int** board)
+typedef struct fileformat {
+    int rows;
+    int cols;
+    int** initialize;
+} fileformat;
+
+fileformat* read_config_file(char* filename)
 {
-    free(*board);
-    free(board);
+    FILE* fid;
+    char str[1000];
+    fid = fopen(filename, "r");
+    int rows = atoi(fgets(str, 1000, fid));
+    int cols = atoi(fgets(str, 1000, fid));
+    int i;
+    int** board = (int**) malloc(sizeof(int*)*rows);
+
+    for(i = 0; i < rows; i++)
+    {
+        board[i] = convert(fgets(str, 1000, fid));
+    }
+    fclose(fid);
+
+    fileformat* file = (fileformat*) malloc(sizeof(fileformat));
+    file->rows = rows;
+    file->cols = cols;
+    file->initialize = board;
+
+    return file;
 }
 
 void print_board(int** board)
@@ -72,6 +85,62 @@ void print_board(int** board)
         printf("\n");
     }
     printf("\n");
+}
+
+// TODO: Make zero an initial state, not a boolean
+int** initialize_board(char* initial_state, bool zero_init)
+{
+    int width, height, row, col;
+    int** board = (int**) malloc(sizeof(int*)*width);
+    for(row = 0; row < width; row++)
+    {
+        board[row] = (int*) malloc(sizeof(int)*height);
+    }
+
+    if(strcmp(initial_state, "random") == 0)
+    {
+        width = WIDTH;
+        height = HEIGHT;
+        time_t t;
+        srand((unsigned) time(&t));
+
+        for(row = 0; row < width; row++)
+        {
+            for(col = 0; col < height; col++)
+            {
+                if(zero_init)
+                {
+                    board[row][col] = 0;
+                }
+                else
+                {
+                    board[row][col] = rand() % 2;
+                }
+            }
+        }
+    }
+    else
+    {
+        fileformat* info = read_config_file("/home/twidis/conway/init_configs/block.txt");
+        width = info->cols;
+        height = info->rows;
+        //board = info->initialize;
+        for(row = 0; row < width; row++)
+        {
+            for(col = 0; col < height; col++)
+            {
+                board[row][col] = info->initialize[row][col];
+            }
+        }
+    }
+
+    return board;
+}
+
+int** delete_board(int** board)
+{
+    free(*board);
+    free(board);
 }
 
 int get_num_neighbors(int** board, int i, int j)
@@ -117,7 +186,7 @@ void iterate(int** curr_state, int** next_state)
         print_board(curr_state);
         delete_board(curr_state);
         curr_state = next_state;
-        next_state = initialize_board("zero");
+        next_state = initialize_board("random", true);
         sleep(1);
     }
 }
@@ -129,14 +198,15 @@ int main(int argc, char* argv[])
 
     if(argc != 2)
     {
-        curr_state = initialize_board("random");
+        curr_state = initialize_board("random", false);
+        next_state = initialize_board("random", true);
     }
     else
     {
-        curr_state = initialize_board(argv[1]);
+        curr_state = initialize_board(argv[1], false);
+        next_state = initialize_board(argv[1], true);
     }
-
-    next_state = initialize_board("zero");
+    return(1);
 
     iterate(curr_state, next_state);
 
