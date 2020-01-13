@@ -4,39 +4,27 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
+#include <math.h>
 
 const int WIDTH = 4;
 const int HEIGHT = 4;
 const int ITERATIONS = 1;
 
-/***
-  Initial Configurations:
-    Block
-    Beehive
-    Loaf
-    Boat
-    Tub
-    Blinker
-    Toad
-    Beacon
-    Pulsar
-    Pentadecathlon
-    Glider
-    LWSS
-    MWSS
-    HWSS
-    Rpentomino
-    Diehard
-    Acorn
-***/
 int* convert(char* c)
 {
-    int len = strlen(c),i;
+    int len = (strlen(c) / 2) + 1;
+    int i;
+    int idx = 0;
     int* a = (int*) malloc(len*sizeof(int));
-    for(i = 0; i < len; i++)
+
+    // TODO: Get rid of these magic numbers
+    for(i = 0; i < strlen(c); i++)
     {
-        a[i] = c[i] - 48;
-        printf("%d\n", a[i]);
+        if(c[i] != 32)
+        {
+            a[idx] = c[i] - 48;
+            idx = idx + 1;
+        }
     }
     return a;
 }
@@ -124,7 +112,6 @@ int** initialize_board(char* initial_state, bool zero_init)
         fileformat* info = read_config_file("/home/twidis/conway/init_configs/block.txt");
         width = info->cols;
         height = info->rows;
-        //board = info->initialize;
         for(row = 0; row < width; row++)
         {
             for(col = 0; col < height; col++)
@@ -132,6 +119,7 @@ int** initialize_board(char* initial_state, bool zero_init)
                 board[row][col] = info->initialize[row][col];
             }
         }
+        print_board(board);
     }
 
     return board;
@@ -193,6 +181,14 @@ void iterate(int** curr_state, int** next_state)
 
 int main(int argc, char* argv[])
 {
+    /***
+    char* str = "1 2 3 4 5";
+    int* ints = convert(str);
+    int i;
+    for(i = 0; i < 5; i++)
+        printf("%d ", ints[i]);
+    return(1);
+    ***/
     int** curr_state;
     int** next_state;
 
