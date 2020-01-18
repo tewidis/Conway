@@ -72,7 +72,6 @@ game* read_config_file(char* filename)
     file->height = height;
     file->width = width;
     file->board = board;
-    print_board(file);
 
     return file;
 }
@@ -153,6 +152,7 @@ game* initialize_board(char* initial_state, int width, int height)
     new_game->width = width;
     new_game->height = height;
     new_game->board = board;
+    //print_board(new_game);
     return new_game;
 }
 
@@ -162,17 +162,18 @@ void delete_board(game* board)
     free(board);
 }
 
+// TODO: Stop using i and j
 int get_num_neighbors(game* board, int i, int j)
 {
     int num_neighbors = 0;
 
     if(i > 0) { num_neighbors += board->board[i-1][j]; }
     if(j > 0) { num_neighbors += board->board[i][j-1]; }
-    if(i < board->width-1) { num_neighbors += board->board[i+1][j]; }
-    if(j < board->height-1) { num_neighbors += board->board[i][j+1]; }
-    if(i > 0 && j < board->height-1) { num_neighbors += board->board[i-1][j+1]; }
-    if(i < board->width-1 && j > 0) { num_neighbors += board->board[i+1][j-1]; }
-    if(i < board->width-1 && j < board->height-1) { num_neighbors += board->board[i+1][j+1]; }
+    if(i < board->height-1) { num_neighbors += board->board[i+1][j]; }
+    if(j < board->width-1) { num_neighbors += board->board[i][j+1]; }
+    if(i > 0 && j < board->width-1) { num_neighbors += board->board[i-1][j+1]; }
+    if(i < board->height-1 && j > 0) { num_neighbors += board->board[i+1][j-1]; }
+    if(i < board->height-1 && j < board->width-1) { num_neighbors += board->board[i+1][j+1]; }
     if(i > 0 && j > 0) { num_neighbors += board->board[i-1][j-1]; }
 
     return num_neighbors;
