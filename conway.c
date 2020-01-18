@@ -6,9 +6,15 @@
 #include <string.h>
 #include <math.h>
 
-const int WIDTH = 4;
+const int WIDTH = 8;
 const int HEIGHT = 4;
-const int ITERATIONS = 1;
+const int ITERATIONS = 10;
+
+typedef struct game {
+    int width;
+    int height;
+    int** board;
+} game;
 
 int* convert(char* c)
 {
@@ -29,45 +35,15 @@ int* convert(char* c)
     return a;
 }
 
-typedef struct fileformat {
-    int rows;
-    int cols;
-    int** initialize;
-} fileformat;
-
-fileformat* read_config_file(char* filename)
-{
-    FILE* fid;
-    char str[1000];
-    fid = fopen(filename, "r");
-    int rows = atoi(fgets(str, 1000, fid));
-    int cols = atoi(fgets(str, 1000, fid));
-    int i;
-    int** board = (int**) malloc(sizeof(int*)*rows);
-
-    for(i = 0; i < rows; i++)
-    {
-        board[i] = convert(fgets(str, 1000, fid));
-    }
-    fclose(fid);
-
-    fileformat* file = (fileformat*) malloc(sizeof(fileformat));
-    file->rows = rows;
-    file->cols = cols;
-    file->initialize = board;
-
-    return file;
-}
-
-void print_board(int** board)
+void print_board(game* board)
 {
     system("clear");
     int row, col;
-    for(row = 0; row < WIDTH; row++)
+    for(row = 0; row < board->height; row++)
     {
-        for(col = 0; col < HEIGHT; col++)
+        for(col = 0; col < board->width; col++)
         {
-            printf("%d ", board[row][col]);
+            printf("%d ", board->board[row][col]);
             //fflush(stdout);
         }
         printf("\n");
@@ -75,98 +51,153 @@ void print_board(int** board)
     printf("\n");
 }
 
-// TODO: Make zero an initial state, not a boolean
-int** initialize_board(char* initial_state, bool zero_init)
+game* read_config_file(char* filename)
 {
-    int width, height, row, col;
-    int** board = (int**) malloc(sizeof(int*)*width);
-    for(row = 0; row < width; row++)
-    {
-        board[row] = (int*) malloc(sizeof(int)*height);
-    }
+    // TODO: Get rid of these magic numbers
+    FILE* fid;
+    char str[1000];
+    fid = fopen(filename, "r");
+    int height = atoi(fgets(str, 1000, fid));
+    int width = atoi(fgets(str, 1000, fid));
+    int i;
+    int** board = (int**) malloc(sizeof(int*)*height);
 
+    for(i = 0; i < height; i++)
+    {
+        board[i] = convert(fgets(str, 1000, fid));
+    }
+    fclose(fid);
+
+    game* file = (game*) malloc(sizeof(game));
+    file->height = height;
+    file->width = width;
+    file->board = board;
+    print_board(file);
+
+    return file;
+}
+
+game* initialize_board(char* initial_state, int width, int height)
+{
+    int row, col;
+    int** board;
+
+    if(width == 0) { width = WIDTH; }
+    if(height == 0) { height = HEIGHT; }
+
+    // TODO: Refactor the duplication out of this
     if(strcmp(initial_state, "random") == 0)
     {
-        width = WIDTH;
-        height = HEIGHT;
         time_t t;
         srand((unsigned) time(&t));
 
-        for(row = 0; row < width; row++)
+        board = (int**) malloc(sizeof(int*)*height);
+        for(row = 0; row < height; row++)
         {
-            for(col = 0; col < height; col++)
+            board[row] = (int*) malloc(sizeof(int)*width);
+        }
+
+        for(row = 0; row < height; row++)
+        {
+            for(col = 0; col < width; col++)
             {
-                if(zero_init)
-                {
-                    board[row][col] = 0;
-                }
-                else
-                {
-                    board[row][col] = rand() % 2;
-                }
+                board[row][col] = rand() % 2;
+            }
+        }
+    }
+    else if(strcmp(initial_state, "zero") == 0)
+    {
+        board = (int**) malloc(sizeof(int*)*height);
+        for(row = 0; row < height; row++)
+        {
+            board[row] = (int*) malloc(sizeof(int)*width);
+        }
+
+        for(row = 0; row < height; row++)
+        {
+            for(col = 0; col < width; col++)
+            {
+                board[row][col] = 0;
             }
         }
     }
     else
     {
-        fileformat* info = read_config_file("/home/twidis/conway/init_configs/block.txt");
-        width = info->cols;
-        height = info->rows;
-        for(row = 0; row < width; row++)
+        int total_length = strlen("/home/twidis/conway/init_configs/.txt") + strlen(initial_state) + 1;
+        char* filepath = (char*) malloc(total_length * sizeof(char));
+        strcpy(filepath, "/home/twidis/conway/init_configs/");
+        strcat(filepath, initial_state);
+        strcat(filepath, ".txt\0");
+
+        game* info = read_config_file(filepath);
+        free(filepath);
+        width = info->width;
+        height = info->height;
+
+        board = (int**) malloc(sizeof(int*)*height);
+        for(row = 0; row < height; row++)
         {
-            for(col = 0; col < height; col++)
+            board[row] = (int*) malloc(sizeof(int) * width);
+        }
+
+        for(row = 0; row < height; row++)
+        {
+            for(col = 0; col < width; col++)
             {
-                board[row][col] = info->initialize[row][col];
+                board[row][col] = info->board[row][col];
             }
         }
-        print_board(board);
     }
 
-    return board;
+    game* new_game = (game*) malloc(sizeof(game));
+    new_game->width = width;
+    new_game->height = height;
+    new_game->board = board;
+    return new_game;
 }
 
-int** delete_board(int** board)
+void delete_board(game* board)
 {
-    free(*board);
+    //free(*board);
     free(board);
 }
 
-int get_num_neighbors(int** board, int i, int j)
+int get_num_neighbors(game* board, int i, int j)
 {
     int num_neighbors = 0;
 
-    if(i > 0) { num_neighbors += board[i-1][j]; }
-    if(j > 0) { num_neighbors += board[i][j-1]; }
-    if(i < WIDTH-1) { num_neighbors += board[i+1][j]; }
-    if(j < HEIGHT-1) { num_neighbors += board[i][j+1]; }
-    if(i > 0 && j < HEIGHT-1) { num_neighbors += board[i-1][j+1]; }
-    if(i < WIDTH-1 && j > 0) { num_neighbors += board[i+1][j-1]; }
-    if(i < WIDTH-1 && j < HEIGHT-1) { num_neighbors += board[i+1][j+1]; }
-    if(i > 0 && j > 0) { num_neighbors += board[i-1][j-1]; }
+    if(i > 0) { num_neighbors += board->board[i-1][j]; }
+    if(j > 0) { num_neighbors += board->board[i][j-1]; }
+    if(i < board->width-1) { num_neighbors += board->board[i+1][j]; }
+    if(j < board->height-1) { num_neighbors += board->board[i][j+1]; }
+    if(i > 0 && j < board->height-1) { num_neighbors += board->board[i-1][j+1]; }
+    if(i < board->width-1 && j > 0) { num_neighbors += board->board[i+1][j-1]; }
+    if(i < board->width-1 && j < board->height-1) { num_neighbors += board->board[i+1][j+1]; }
+    if(i > 0 && j > 0) { num_neighbors += board->board[i-1][j-1]; }
 
     return num_neighbors;
 }
 
-void iterate(int** curr_state, int** next_state)
+void iterate(game* curr_state, game* next_state)
 {
     int row, col, iter;
 
     for(iter = 0; iter < ITERATIONS; iter++)
     {
-        for(row = 0; row < WIDTH; row++)
+        for(row = 0; row < curr_state->height; row++)
         {
-            for(col = 0; col < HEIGHT; col++)
+            for(col = 0; col < curr_state->width; col++)
             {
                 int neighbors = get_num_neighbors(curr_state, row, col);
 
-                if(curr_state[row][col] == 1) // alive
+                if(curr_state->board[row][col] == 1) // alive
                 {
-                    if(neighbors == 2 || neighbors == 3) { next_state[row][col] = 1; }
-                    else { next_state[row][col] = 0; }
+                    if(neighbors == 2 || neighbors == 3) { next_state->board[row][col] = 1; }
+                    else { next_state->board[row][col] = 0; }
                 }
                 else // dead
                 {
-                    if(neighbors == 3) { next_state[row][col] = 1; }
+                    if(neighbors == 3) { next_state->board[row][col] = 1; }
                 }
             }
         }
@@ -174,39 +205,31 @@ void iterate(int** curr_state, int** next_state)
         print_board(curr_state);
         delete_board(curr_state);
         curr_state = next_state;
-        next_state = initialize_board("random", true);
+        next_state = initialize_board("zero", curr_state->width, curr_state->height);
         sleep(1);
     }
 }
 
 int main(int argc, char* argv[])
 {
-    /***
-    char* str = "1 2 3 4 5";
-    int* ints = convert(str);
-    int i;
-    for(i = 0; i < 5; i++)
-        printf("%d ", ints[i]);
-    return(1);
-    ***/
-    int** curr_state;
-    int** next_state;
+    game* curr_state;
+    game* next_state;
 
     if(argc != 2)
     {
-        curr_state = initialize_board("random", false);
-        next_state = initialize_board("random", true);
+        curr_state = initialize_board("random", 0, 0);
+        next_state = initialize_board("zero", 0, 0);
     }
     else
     {
-        curr_state = initialize_board(argv[1], false);
-        next_state = initialize_board(argv[1], true);
+        curr_state = initialize_board(argv[1], 0, 0);
+        next_state = initialize_board("zero", curr_state->width, curr_state->height);
     }
-    return(1);
 
     iterate(curr_state, next_state);
 
-    delete_board(curr_state);
-    delete_board(next_state);
+    // I think this has already been freed?
+    //delete_board(curr_state);
+    //delete_board(next_state);
 }
 
