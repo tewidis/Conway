@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <wchar.h>
+#include <locale.h>
 
 const int WIDTH = 8;
 const int HEIGHT = 4;
@@ -38,17 +40,20 @@ int* convert(char* c)
 void print_board(game* board)
 {
     system("clear");
+    setlocale(LC_CTYPE, "");
+    wchar_t solid_box = 0x25A0;
+    wchar_t empty_box = 0x25A1;
     int row, col;
     for(row = 0; row < board->height; row++)
     {
         for(col = 0; col < board->width; col++)
         {
-            printf("%d ", board->board[row][col]);
-            //fflush(stdout);
+            if(board->board[row][col]) { wprintf(L"%lc", solid_box); }
+            else{ wprintf(L"%lc", empty_box); }
         }
-        printf("\n");
+        wprintf(L"\n");
     }
-    printf("\n");
+    wprintf(L"\n");
 }
 
 game* read_config_file(char* filename)
