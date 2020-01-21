@@ -56,8 +56,14 @@ void print_board(game* board)
     wprintf(L"\n");
 }
 
-game* read_config_file(char* filename)
+game* read_config_file(char* initial_state)
 {
+    int total_length = strlen("/home/twidis/conway/init_configs/.txt") + strlen(initial_state) + 1;
+    char* filename = (char*) malloc(total_length * sizeof(char));
+    strcpy(filename, "/home/twidis/conway/init_configs/");
+    strcat(filename, initial_state);
+    strcat(filename, ".txt\0");
+
     // TODO: Get rid of these magic numbers
     FILE* fid;
     char str[1000];
@@ -78,6 +84,7 @@ game* read_config_file(char* filename)
     file->width = width;
     file->board = board;
 
+    free(filename);
     return file;
 }
 
@@ -85,71 +92,33 @@ game* initialize_board(char* initial_state, int width, int height)
 {
     int row, col;
     int** board;
+    game* info;
 
+    if(strcmp(initial_state, "random") != 0 && strcmp(initial_state, "zero") != 0)
+    {
+        info = read_config_file(initial_state);
+        width = info->width;
+        height = info->height;
+    }
     if(width == 0) { width = WIDTH; }
     if(height == 0) { height = HEIGHT; }
 
-    // TODO: Refactor the duplication out of this
-    if(strcmp(initial_state, "random") == 0)
+    time_t t;
+    srand((unsigned) time(&t));
+
+    board = (int**) malloc(sizeof(int*)*height);
+    for(row = 0; row < height; row++)
     {
-        time_t t;
-        srand((unsigned) time(&t));
-
-        board = (int**) malloc(sizeof(int*)*height);
-        for(row = 0; row < height; row++)
-        {
-            board[row] = (int*) malloc(sizeof(int)*width);
-        }
-
-        for(row = 0; row < height; row++)
-        {
-            for(col = 0; col < width; col++)
-            {
-                board[row][col] = rand() % 2;
-            }
-        }
+        board[row] = (int*) malloc(sizeof(int)*width);
     }
-    else if(strcmp(initial_state, "zero") == 0)
+
+    for(row = 0; row < height; row++)
     {
-        board = (int**) malloc(sizeof(int*)*height);
-        for(row = 0; row < height; row++)
+        for(col = 0; col < width; col++)
         {
-            board[row] = (int*) malloc(sizeof(int)*width);
-        }
-
-        for(row = 0; row < height; row++)
-        {
-            for(col = 0; col < width; col++)
-            {
-                board[row][col] = 0;
-            }
-        }
-    }
-    else
-    {
-        int total_length = strlen("/home/twidis/conway/init_configs/.txt") + strlen(initial_state) + 1;
-        char* filepath = (char*) malloc(total_length * sizeof(char));
-        strcpy(filepath, "/home/twidis/conway/init_configs/");
-        strcat(filepath, initial_state);
-        strcat(filepath, ".txt\0");
-
-        game* info = read_config_file(filepath);
-        free(filepath);
-        width = info->width;
-        height = info->height;
-
-        board = (int**) malloc(sizeof(int*)*height);
-        for(row = 0; row < height; row++)
-        {
-            board[row] = (int*) malloc(sizeof(int) * width);
-        }
-
-        for(row = 0; row < height; row++)
-        {
-            for(col = 0; col < width; col++)
-            {
-                board[row][col] = info->board[row][col];
-            }
+            if(strcmp(initial_state, "random") == 0) { board[row][col] = rand() % 2; }
+            else if(strcmp(initial_state, "zero") == 0) { board[row][col] = 0; }
+            else { board[row][col] = info->board[row][col]; }
         }
     }
 
@@ -157,29 +126,26 @@ game* initialize_board(char* initial_state, int width, int height)
     new_game->width = width;
     new_game->height = height;
     new_game->board = board;
-    //print_board(new_game);
     return new_game;
 }
 
 void delete_board(game* board)
 {
-    //free(*board);
     free(board);
 }
 
-// TODO: Stop using i and j
-int get_num_neighbors(game* board, int i, int j)
+int get_num_neighbors(game* board, int row, int col)
 {
     int num_neighbors = 0;
 
-    if(i > 0) { num_neighbors += board->board[i-1][j]; }
-    if(j > 0) { num_neighbors += board->board[i][j-1]; }
-    if(i < board->height-1) { num_neighbors += board->board[i+1][j]; }
-    if(j < board->width-1) { num_neighbors += board->board[i][j+1]; }
-    if(i > 0 && j < board->width-1) { num_neighbors += board->board[i-1][j+1]; }
-    if(i < board->height-1 && j > 0) { num_neighbors += board->board[i+1][j-1]; }
-    if(i < board->height-1 && j < board->width-1) { num_neighbors += board->board[i+1][j+1]; }
-    if(i > 0 && j > 0) { num_neighbors += board->board[i-1][j-1]; }
+    if(row > 0) { num_neighbors += board->board[row-1][col]; }
+    if(col > 0) { num_neighbors += board->board[row][col-1]; }
+    if(row < board->height-1) { num_neighbors += board->board[row+1][col]; }
+    if(col < board->width-1) { num_neighbors += board->board[row][col+1]; }
+    if(row > 0 && col < board->width-1) { num_neighbors += board->board[row-1][col+1]; }
+    if(row < board->height-1 && col > 0) { num_neighbors += board->board[row+1][col-1]; }
+    if(row < board->height-1 && col < board->width-1) { num_neighbors += board->board[row+1][col+1]; }
+    if(row > 0 && col > 0) { num_neighbors += board->board[row-1][col-1]; }
 
     return num_neighbors;
 }
