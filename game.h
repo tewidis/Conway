@@ -4,6 +4,7 @@
 typedef struct game {
     int width;
     int height;
+    int iterations;
     int** board;
 } game;
 

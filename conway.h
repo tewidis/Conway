@@ -9,7 +9,7 @@ void print_board(game* board);
 
 game* read_config_file(char* initial_state);
 
-game* initialize_board(char* initial_state, int width, int height);
+game* initialize_board(char* initial_state, int width, int height, int iterations);
 
 void delete_board(game* board);
 

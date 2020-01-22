@@ -12,10 +12,6 @@
 #include "config_file.h"
 #include "conway.h"
 
-const int WIDTH = 8;
-const int HEIGHT = 4;
-const int ITERATIONS = 10;
-
 void print_board(game* board)
 {
     system("clear");
@@ -35,7 +31,7 @@ void print_board(game* board)
     wprintf(L"\n");
 }
 
-game* initialize_board(char* initial_state, int width, int height)
+game* initialize_board(char* initial_state, int width, int height, int iterations)
 {
     int row, col;
     int** board;
@@ -49,8 +45,6 @@ game* initialize_board(char* initial_state, int width, int height)
         width = info->width;
         height = info->height;
     }
-    if(width == 0) { width = WIDTH; }
-    if(height == 0) { height = HEIGHT; }
 
     board = (int**) malloc(sizeof(int*)*height);
     for(row = 0; row < height; row++)
@@ -72,6 +66,7 @@ game* initialize_board(char* initial_state, int width, int height)
     new_game->width = width;
     new_game->height = height;
     new_game->board = board;
+    new_game->iterations = iterations;
     return new_game;
 }
 
@@ -100,7 +95,7 @@ void iterate(game* curr_state, game* next_state)
 {
     int row, col, iter;
 
-    for(iter = 0; iter < ITERATIONS; iter++)
+    for(iter = 0; iter < curr_state->iterations; iter++)
     {
         for(row = 0; row < curr_state->height; row++)
         {
@@ -123,7 +118,7 @@ void iterate(game* curr_state, game* next_state)
         print_board(curr_state);
         delete_board(curr_state);
         curr_state = next_state;
-        next_state = initialize_board("zero", curr_state->width, curr_state->height);
+        next_state = initialize_board("zero", curr_state->width, curr_state->height, curr_state->iterations);
         sleep(1);
     }
 }
@@ -133,15 +128,49 @@ int main(int argc, char* argv[])
     game* curr_state;
     game* next_state;
 
-    if(argc != 2)
+    switch(argc)
     {
-        curr_state = initialize_board("random", 0, 0);
-        next_state = initialize_board("zero", 0, 0);
-    }
-    else
-    {
-        curr_state = initialize_board(argv[1], 0, 0);
-        next_state = initialize_board("zero", curr_state->width, curr_state->height);
+        case 3:
+            if( (strcmp(argv[1], "block") == 0) ||
+                (strcmp(argv[1], "beehive") == 0) ||
+                (strcmp(argv[1], "loaf") == 0) ||
+                (strcmp(argv[1], "boat") == 0) ||
+                (strcmp(argv[1], "tub") == 0) ||
+                (strcmp(argv[1], "blinker") == 0) ||
+                (strcmp(argv[1], "beacon") == 0) ||
+                (strcmp(argv[1], "pulsar") == 0) ||
+                (strcmp(argv[1], "pentadecathlon") == 0) ||
+                (strcmp(argv[1], "toad") == 0) ||
+                (strcmp(argv[1], "rpentomino") == 0) ||
+                (strcmp(argv[1], "acorn") == 0) ||
+                (strcmp(argv[1], "diehard") == 0) ||
+                (strcmp(argv[1], "glider") == 0) ||
+                (strcmp(argv[1], "lwss") == 0) ||
+                (strcmp(argv[1], "mwss") == 0) ||
+                (strcmp(argv[1], "hwss") == 0) ||
+                (strcmp(argv[1], "simkin_glider_gun") == 0) ||
+                (strcmp(argv[1], "gosper_glider_gun") == 0) )
+                {
+                    int iterations = atoi(argv[2]);
+                    curr_state = initialize_board(argv[1], 0, 0, iterations);
+                    next_state = initialize_board("zero", curr_state->width, curr_state->height, curr_state->iterations);
+                }
+            else { puts(argv[1]); fprintf(stderr, "Invalid configuration string\n"); return(-1); }
+            break;
+        case 5:
+            if(strcmp(argv[1], "random") == 0)
+            {
+                int width = atoi(argv[2]);
+                int height = atoi(argv[3]);
+                int iterations = atoi(argv[4]);
+                curr_state = initialize_board("random", width, height, iterations);
+                next_state = initialize_board("zero", width, height, iterations);
+            }
+            else { fprintf(stderr, "Invalid configuration string\n"); return(-1); }
+            break;
+        default:
+            fprintf(stderr, "Invalid number of arguments\n");
+            return(-1);
     }
 
     iterate(curr_state, next_state);

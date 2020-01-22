@@ -8,7 +8,7 @@ opportunity to brush up on C.
 
 ## Compiling
 * git clone https://github.com/tewidis/Conway.git
-* gcc -g conway.c -o conway
+* make
 
 ## Running Examples
 * ./conway will run with a random initial condition
@@ -36,10 +36,6 @@ opportunity to brush up on C.
 * gosper_glider_gun
 
 ## Future Work
-* Write a make file for compiling
 * Remove memory leaks
-* Accept number of iterations as an input as opposed to a global variable
-* Refactor duplicate pieces
-* Make header files and split code into different .c files
 
 ## Conclusion
