@@ -11,8 +11,10 @@ opportunity to brush up on C.
 * make
 
 ## Running Examples
-* ./conway will run with a random initial condition
-* ./conway <initial_configuration> runs with the specified initial condition
+* ./conway random <width> <height> <n> creates a board of size width by height
+  and runs for n iterations
+* ./conway <initial_configuration> <n> runs with the specified initial
+  condition for <n> iterations
 
 ## List of Initial Configurations
 * block
