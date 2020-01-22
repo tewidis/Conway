@@ -8,34 +8,13 @@
 #include <wchar.h>
 #include <locale.h>
 
+#include "game.h"
+#include "config_file.h"
+#include "conway.h"
+
 const int WIDTH = 8;
 const int HEIGHT = 4;
 const int ITERATIONS = 10;
-
-typedef struct game {
-    int width;
-    int height;
-    int** board;
-} game;
-
-int* convert(char* c)
-{
-    int len = (strlen(c) / 2) + 1;
-    int i;
-    int idx = 0;
-    int* a = (int*) malloc(len*sizeof(int));
-
-    // TODO: Get rid of these magic numbers
-    for(i = 0; i < strlen(c); i++)
-    {
-        if(c[i] != 32)
-        {
-            a[idx] = c[i] - 48;
-            idx = idx + 1;
-        }
-    }
-    return a;
-}
 
 void print_board(game* board)
 {
@@ -56,43 +35,13 @@ void print_board(game* board)
     wprintf(L"\n");
 }
 
-game* read_config_file(char* initial_state)
-{
-    int total_length = strlen("/home/twidis/conway/init_configs/.txt") + strlen(initial_state) + 1;
-    char* filename = (char*) malloc(total_length * sizeof(char));
-    strcpy(filename, "/home/twidis/conway/init_configs/");
-    strcat(filename, initial_state);
-    strcat(filename, ".txt\0");
-
-    // TODO: Get rid of these magic numbers
-    FILE* fid;
-    char str[1000];
-    fid = fopen(filename, "r");
-    int height = atoi(fgets(str, 1000, fid));
-    int width = atoi(fgets(str, 1000, fid));
-    int i;
-    int** board = (int**) malloc(sizeof(int*)*height);
-
-    for(i = 0; i < height; i++)
-    {
-        board[i] = convert(fgets(str, 1000, fid));
-    }
-    fclose(fid);
-
-    game* file = (game*) malloc(sizeof(game));
-    file->height = height;
-    file->width = width;
-    file->board = board;
-
-    free(filename);
-    return file;
-}
-
 game* initialize_board(char* initial_state, int width, int height)
 {
     int row, col;
     int** board;
     game* info;
+    time_t t;
+    srand((unsigned) time(&t));
 
     if(strcmp(initial_state, "random") != 0 && strcmp(initial_state, "zero") != 0)
     {
@@ -102,9 +51,6 @@ game* initialize_board(char* initial_state, int width, int height)
     }
     if(width == 0) { width = WIDTH; }
     if(height == 0) { height = HEIGHT; }
-
-    time_t t;
-    srand((unsigned) time(&t));
 
     board = (int**) malloc(sizeof(int*)*height);
     for(row = 0; row < height; row++)
