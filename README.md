@@ -8,6 +8,7 @@ opportunity to brush up on C.
 
 ## Compiling
 * git clone https://github.com/tewidis/Conway.git
+* make clean
 * make
 
 ## Running Examples
@@ -37,7 +38,9 @@ opportunity to brush up on C.
 * simkin_glider_gun
 * gosper_glider_gun
 
-## Future Work
-* Remove memory leaks
-
 ## Conclusion
+Through completing this project, I gained a better understanding of how to
+debug C code using common tools such as gdb and valgrind. Additionally, I was
+able to refresh my understanding of C syntax and memory management. This
+project was also my first time creating my own makefile, so I gained a deeper
+understanding of the compiling and linking process.
