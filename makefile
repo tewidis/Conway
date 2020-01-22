@@ -8,12 +8,14 @@ CFLAGS = -g -Wall
 
 # the build target executable
 TARGET = conway
-DEPEND = config_file
+
+# define the object files
+OBJFILES = conway.o config_file.o
 
 all: $(TARGET)
 
-$(TARGET): $(TARGET).c
-	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).c $(DEPEND).c
+$(TARGET): $(OBJFILES)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJFILES)
 
 clean:
-	$(RM) $(TARGET)
+	$(RM) $(TARGET) $(OBJFILES) *~
