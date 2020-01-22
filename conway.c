@@ -62,6 +62,11 @@ game* initialize_board(char* initial_state, int width, int height, int iteration
         }
     }
 
+    if(strcmp(initial_state, "random") != 0 && strcmp(initial_state, "zero") != 0)
+    {
+        delete_board(info);
+    }
+
     game* new_game = (game*) malloc(sizeof(game));
     new_game->width = width;
     new_game->height = height;
@@ -70,9 +75,14 @@ game* initialize_board(char* initial_state, int width, int height, int iteration
     return new_game;
 }
 
-void delete_board(game* board)
+void delete_board(game* del_game)
 {
-    free(board);
+    int row;
+    for(row = 0; row < del_game->height; row++)
+        free(del_game->board[row]);
+
+    free(del_game->board);
+    free(del_game);
 }
 
 int get_num_neighbors(game* board, int row, int col)
@@ -121,6 +131,7 @@ void iterate(game* curr_state, game* next_state)
         next_state = initialize_board("zero", curr_state->width, curr_state->height, curr_state->iterations);
         sleep(1);
     }
+    delete_board(next_state);
 }
 
 int main(int argc, char* argv[])
@@ -175,8 +186,6 @@ int main(int argc, char* argv[])
 
     iterate(curr_state, next_state);
 
-    // I think this has already been freed?
-    //delete_board(curr_state);
-    //delete_board(next_state);
+    delete_board(next_state);
 }
 
