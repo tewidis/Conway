@@ -30,9 +30,9 @@ int* convert(char* c)
 
 game* read_config_file(char* initial_state)
 {
-    int total_length = strlen("/home/twidis/conway/init_configs/.txt") + strlen(initial_state) + 1;
+    int total_length = strlen("init_configs/.txt") + strlen(initial_state) + 1;
     char* filename = (char*) malloc(total_length * sizeof(char));
-    strcpy(filename, "/home/twidis/conway/init_configs/");
+    strcpy(filename, "init_configs/");
     strcat(filename, initial_state);
     strcat(filename, ".txt\0");
 
